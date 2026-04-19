@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo de Grego Antigo</title>
+</head>
+<body>
+
+<h2 id="pergunta"></h2>
+<input id="resposta" type="text">
+<button onclick="checar()">Responder</button>
+<p id="feedback"></p>
+
+<script>
+const palavras = [
+  {
+    base: "λόγος",
+    formas: {
+      nominativo: "ὁ λόγος",
+      genitivo: "τοῦ λόγου",
+      dativo: "τῷ λόγῳ",
+      acusativo: "τὸν λόγον"
+    }
+  },
+  {
+    base: "ἄνθρωπος",
+    formas: {
+      nominativo: "ὁ ἄνθρωπος",
+      genitivo: "τοῦ ἀνθρώπου",
+      dativo: "τῷ ἀνθρώπῳ",
+      acusativo: "τὸν ἄνθρωπον"
+    }
+  }
+];
+
+let atual = {};
+
+function novaPergunta() {
+  const casos = ["nominativo", "genitivo", "dativo", "acusativo"];
+  const palavra = palavras[Math.floor(Math.random()*palavras.length)];
+  const caso = casos[Math.floor(Math.random()*casos.length)];
+
+  atual = {
+    correta: palavra.formas[caso]
+  };
+
+  document.getElementById("pergunta").innerText =
+    palavra.base + " — " + caso;
+}
+
+function checar() {
+  const resposta = document.getElementById("resposta").value;
+
+  if (resposta === atual.correta) {
+    document.getElementById("feedback").innerText = "Correto!";
+  } else {
+    document.getElementById("feedback").innerText =
+      "Errado! Correto: " + atual.correta;
+  }
+
+  novaPergunta();
+}
+
+novaPergunta();
+</script>
+
+</body>
+  </html>

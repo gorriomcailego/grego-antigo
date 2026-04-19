@@ -1,15 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
   <meta charset="UTF-8">
   <title>Jogo de Grego Antigo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2b2b45);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #2f2f4f;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      text-align: center;
+      width: 340px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    #pergunta {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #ffd166;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    button {
+      background: #06d6a0;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #04b383;
+    }
+
+    #feedback {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 40px;
+    }
+
+    .correto { color: #06d6a0; }
+    .meio { color: #ffd166; }
+    .errado { color: #ef476f; }
+
+    .score {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body>
 
-<h2 id="pergunta"></h2>
-<input id="resposta" type="text">
-<button onclick="checar()">Responder</button>
-<p id="feedback"></p>
+<div class="card">
+  <h1>🇬🇷 Jogo de Grego Antigo</h1>
+  <div id="pergunta"></div>
+  <input id="resposta" type="text" placeholder="Digite sua resposta...">
+  <button onclick="checar()">Responder</button>
+  <div id="feedback"></div>
+  <div class="score" id="score"></div>
+</div>
 
 <script>
 const palavras = [
@@ -30,10 +106,33 @@ const palavras = [
       dativo: "τῷ ἀνθρώπῳ",
       acusativo: "τὸν ἄνθρωπον"
     }
+  },
+  {
+    base: "δῶρον",
+    formas: {
+      nominativo: "τὸ δῶρον",
+      genitivo: "τοῦ δώρου",
+      dativo: "τῷ δώρῳ",
+      acusativo: "τὸ δῶρον"
+    }
   }
 ];
 
 let atual = {};
+let pontos = 0;
+let total = 0;
+
+function normalizar(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[\u1f00-\u1fff]/g, function(c) { // remove espíritos/iota subscrito aproximando
+      return c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function novaPergunta() {
   const casos = ["nominativo", "genitivo", "dativo", "acusativo"];
@@ -46,23 +145,37 @@ function novaPergunta() {
 
   document.getElementById("pergunta").innerText =
     palavra.base + " — " + caso;
+
+  document.getElementById("resposta").value = "";
 }
 
 function checar() {
-  const resposta = document.getElementById("resposta").value;
+  const resposta = document.getElementById("resposta").value.trim();
+  total++;
 
-  if (resposta === atual.correta) {
-    document.getElementById("feedback").innerText = "Correto!";
+  const correta = atual.correta;
+
+  if (resposta === correta) {
+    pontos += 1;
+    document.getElementById("feedback").innerText = "✔ Perfeito!";
+    document.getElementById("feedback").className = "correto";
+  } else if (normalizar(resposta) === normalizar(correta)) {
+    pontos += 0.5;
+    document.getElementById("feedback").innerText = "⚠ Quase! Forma correta: " + correta;
+    document.getElementById("feedback").className = "meio";
   } else {
-    document.getElementById("feedback").innerText =
-      "Errado! Correto: " + atual.correta;
+    document.getElementById("feedback").innerText = "✘ Errado! Correto: " + correta;
+    document.getElementById("feedback").className = "errado";
   }
 
-  novaPergunta();
+  document.getElementById("score").innerText =
+    "Pontuação: " + pontos + " / " + total;
+
+  setTimeout(novaPergunta, 1400);
 }
 
 novaPergunta();
 </script>
 
 </body>
-  </html>
+</html>

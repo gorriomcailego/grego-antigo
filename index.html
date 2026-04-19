@@ -1,186 +1,207 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>Duolingo de Grego Antigo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2b2b45);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .app { width: 360px; }
-    .progress-bar { height: 10px; background: #444; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-    .progress { height: 100%; width: 0%; background: #06d6a0; transition: width 0.3s; }
-    .card { background: #2f2f4f; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-    #pergunta { font-size: 22px; margin-bottom: 20px; color: #ffd166; }
-    .choices button { display: block; width: 100%; margin: 6px 0; padding: 12px; border-radius: 10px; border: none; cursor: pointer; background: #3f3f6a; color: white; font-size: 16px; }
-    .choices button:hover { background: #57578a; }
-    #feedback { margin-top: 15px; min-height: 40px; font-weight: bold; }
-    .correto { color: #06d6a0; }
-    .errado { color: #ef476f; }
-    .hud { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>Duolingo de Grego Antigo</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg,#1e1e2f,#2b2b45);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.app { width:360px; }
+
+.progress-bar {
+  height:10px;
+  background:#444;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:15px;
+}
+.progress {
+  height:100%;
+  width:0%;
+  background:#06d6a0;
+}
+
+.card {
+  background:#2f2f4f;
+  padding:25px;
+  border-radius:20px;
+  text-align:center;
+}
+
+#pergunta {
+  font-size:22px;
+  margin-bottom:20px;
+  color:#ffd166;
+}
+
+button {
+  display:block;
+  width:100%;
+  margin:5px 0;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#3f3f6a;
+  color:white;
+  font-size:16px;
+}
+
+button:hover { background:#57578a; }
+
+.correto { color:#06d6a0; }
+.errado { color:#ef476f; }
+
+.hud {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="app">
-  <div class="hud">
-    <div id="streak">🔥 0</div>
-    <div id="score">0 pts</div>
-  </div>
+<div class="hud">
+  <div id="streak">🔥 0</div>
+  <div id="score">0 pts</div>
+</div>
 
-  <div class="progress-bar">
-    <div class="progress" id="progress"></div>
-  </div>
+<div class="progress-bar">
+  <div class="progress" id="progress"></div>
+</div>
 
-  <div class="card">
-    <div id="pergunta"></div>
-    <div class="choices" id="choices"></div>
-    <div id="feedback"></div>
-  </div>
+<div class="card">
+  <div id="pergunta"></div>
+  <div id="choices"></div>
+  <div id="feedback"></div>
+</div>
 </div>
 
 <script>
-// Substantivos já declinados (simulando dicionário)
+
+// VOCABULÁRIO AMPLIADO (estilo LSJ)
 const palavras = [
-  {
-    genero: "m",
-    formas: {
-      nom_sg: "λόγος",
-      gen_sg: "λόγου",
-      dat_sg: "λόγῳ",
-      acc_sg: "λόγον",
-      nom_pl: "λόγοι",
-      gen_pl: "λόγων",
-      dat_pl: "λόγοις",
-      acc_pl: "λόγους"
-    }
-  },
-  {
-    genero: "n",
-    formas: {
-      nom_sg: "δῶρον",
-      gen_sg: "δώρου",
-      dat_sg: "δώρῳ",
-      acc_sg: "δῶρον",
-      nom_pl: "δῶρα",
-      gen_pl: "δώρων",
-      dat_pl: "δώροις",
-      acc_pl: "δῶρα"
-    }
-  },
-  {
-    genero: "f",
-    formas: {
-      nom_sg: "θάλαττα",
-      gen_sg: "θαλάττης",
-      dat_sg: "θαλάττῃ",
-      acc_sg: "θάλατταν",
-      nom_pl: "θάλατται",
-      gen_pl: "θαλαττῶν",
-      dat_pl: "θαλάτταις",
-      acc_pl: "θαλάττας"
-    }
-  }
+
+{genero:"m", formas:{
+nom_sg:"λόγος", gen_sg:"λόγου", dat_sg:"λόγῳ", acc_sg:"λόγον",
+nom_pl:"λόγοι", gen_pl:"λόγων", dat_pl:"λόγοις", acc_pl:"λόγους"}},
+
+{genero:"m", formas:{
+nom_sg:"ἄνθρωπος", gen_sg:"ἀνθρώπου", dat_sg:"ἀνθρώπῳ", acc_sg:"ἄνθρωπον",
+nom_pl:"ἄνθρωποι", gen_pl:"ἀνθρώπων", dat_pl:"ἀνθρώποις", acc_pl:"ἀνθρώπους"}},
+
+{genero:"n", formas:{
+nom_sg:"δῶρον", gen_sg:"δώρου", dat_sg:"δώρῳ", acc_sg:"δῶρον",
+nom_pl:"δῶρα", gen_pl:"δώρων", dat_pl:"δώροις", acc_pl:"δῶρα"}},
+
+{genero:"f", formas:{
+nom_sg:"θάλαττα", gen_sg:"θαλάττης", dat_sg:"θαλάττῃ", acc_sg:"θάλατταν",
+nom_pl:"θάλατται", gen_pl:"θαλαττῶν", dat_pl:"θαλάτταις", acc_pl:"θαλάττας"}},
+
+{genero:"m", formas:{
+nom_sg:"παῖς", gen_sg:"παιδός", dat_sg:"παιδί", acc_sg:"παῖδα",
+nom_pl:"παῖδες", gen_pl:"παίδων", dat_pl:"παισί", acc_pl:"παῖδας"}},
+
+{genero:"f", formas:{
+nom_sg:"γυνή", gen_sg:"γυναικός", dat_sg:"γυναικί", acc_sg:"γυναῖκα",
+nom_pl:"γυναῖκες", gen_pl:"γυναικῶν", dat_pl:"γυναιξί", acc_pl:"γυναῖκας"}}
+
 ];
 
 const artigos = {
-  m: {
-    nom_sg: "ὁ", gen_sg: "τοῦ", dat_sg: "τῷ", acc_sg: "τὸν",
-    nom_pl: "οἱ", gen_pl: "τῶν", dat_pl: "τοῖς", acc_pl: "τούς"
-  },
-  f: {
-    nom_sg: "ἡ", gen_sg: "τῆς", dat_sg: "τῇ", acc_sg: "τήν",
-    nom_pl: "αἱ", gen_pl: "τῶν", dat_pl: "ταῖς", acc_pl: "τάς"
-  },
-  n: {
-    nom_sg: "τό", gen_sg: "τοῦ", dat_sg: "τῷ", acc_sg: "τό",
-    nom_pl: "τά", gen_pl: "τῶν", dat_pl: "τοῖς", acc_pl: "τά"
-  }
+m:{nom_sg:"ὁ",gen_sg:"τοῦ",dat_sg:"τῷ",acc_sg:"τὸν",nom_pl:"οἱ",gen_pl:"τῶν",dat_pl:"τοῖς",acc_pl:"τούς"},
+f:{nom_sg:"ἡ",gen_sg:"τῆς",dat_sg:"τῇ",acc_sg:"τήν",nom_pl:"αἱ",gen_pl:"τῶν",dat_pl:"ταῖς",acc_pl:"τάς"},
+n:{nom_sg:"τό",gen_sg:"τοῦ",dat_sg:"τῷ",acc_sg:"τό",nom_pl:"τά",gen_pl:"τῶν",dat_pl:"τοῖς",acc_pl:"τά"}
 };
 
-const formasLista = [
-  "nom_sg","gen_sg","dat_sg","acc_sg",
-  "nom_pl","gen_pl","dat_pl","acc_pl"
-];
+const formas = ["nom_sg","gen_sg","dat_sg","acc_sg","nom_pl","gen_pl","dat_pl","acc_pl"];
 
 let atual = {};
-let pontos = 0;
-let streak = 0;
-let progresso = 0;
+let pontos=0;
+let streak=0;
+let progresso=0;
 
-function shuffle(a) { return a.sort(() => Math.random() - 0.5); }
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
-function novaPergunta() {
-  document.getElementById("feedback").innerText = "";
+function novaPergunta(){
 
-  const palavra = palavras[Math.floor(Math.random()*palavras.length)];
-  const forma = formasLista[Math.floor(Math.random()*formasLista.length)];
+document.getElementById("feedback").innerText="";
 
-  const substantivo = palavra.formas[forma];
-  const correta = artigos[palavra.genero][forma];
+const p = palavras[Math.floor(Math.random()*palavras.length)];
+const f = formas[Math.floor(Math.random()*formas.length)];
 
-  let opcoes = [correta];
+const substantivo = p.formas[f];
+const correta = artigos[p.genero][f];
 
-  while (opcoes.length < 4) {
-    const g = ["m","f","n"][Math.floor(Math.random()*3)];
-    const f = formasLista[Math.floor(Math.random()*formasLista.length)];
-    const tentativa = artigos[g][f];
-    if (!opcoes.includes(tentativa)) opcoes.push(tentativa);
-  }
+let opcoes=[correta];
 
-  opcoes = shuffle(opcoes);
-
-  atual = { correta };
-
-  document.getElementById("pergunta").innerText = substantivo;
-
-  const container = document.getElementById("choices");
-  container.innerHTML = "";
-
-  opcoes.forEach(op => {
-    const btn = document.createElement("button");
-    btn.innerText = op;
-    btn.onclick = () => checar(op);
-    container.appendChild(btn);
-  });
+while(opcoes.length<6){
+  const g=["m","f","n"][Math.floor(Math.random()*3)];
+  const ff=formas[Math.floor(Math.random()*formas.length)];
+  const tentativa=artigos[g][ff];
+  if(!opcoes.includes(tentativa)) opcoes.push(tentativa);
 }
 
-function checar(resposta) {
-  if (resposta === atual.correta) {
-    pontos += 10;
-    streak++;
-    document.getElementById("feedback").innerText = "✔ Perfeito!";
-    document.getElementById("feedback").className = "correto";
-  } else {
-    streak = 0;
-    document.getElementById("feedback").innerText = "✘ " + atual.correta;
-    document.getElementById("feedback").className = "errado";
+opcoes=shuffle(opcoes);
+
+atual={correta};
+
+document.getElementById("pergunta").innerText=substantivo;
+
+const c=document.getElementById("choices");
+c.innerHTML="";
+
+opcoes.forEach(op=>{
+  const b=document.createElement("button");
+  b.innerText=op;
+  b.onclick=()=>checar(op);
+  c.appendChild(b);
+});
+
+}
+
+function checar(r){
+
+if(r===atual.correta){
+  pontos+=10;
+  streak++;
+  document.getElementById("feedback").innerText="✔";
+  document.getElementById("feedback").className="correto";
+}else{
+  streak=0;
+  document.getElementById("feedback").innerText="✘ "+atual.correta;
+  document.getElementById("feedback").className="errado";
+}
+
+progresso+=10;
+if(progresso>100) progresso=100;
+
+document.getElementById("score").innerText=pontos+" pts";
+document.getElementById("streak").innerText="🔥 "+streak;
+document.getElementById("progress").style.width=progresso+"%";
+
+setTimeout(()=>{
+  if(progresso===100){
+    alert("🏆 Lição completa!");
+    progresso=0;
   }
+  novaPergunta();
+},800);
 
-  progresso += 10;
-  if (progresso > 100) progresso = 100;
-
-  document.getElementById("score").innerText = pontos + " pts";
-  document.getElementById("streak").innerText = "🔥 " + streak;
-  document.getElementById("progress").style.width = progresso + "%";
-
-  setTimeout(() => {
-    if (progresso === 100) {
-      alert("🏆 Lição completa!");
-      progresso = 0;
-    }
-    novaPergunta();
-  }, 800);
 }
 
 novaPergunta();
+
 </script>
 
 </body>

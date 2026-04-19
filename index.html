@@ -18,7 +18,7 @@
     .progress-bar { height: 10px; background: #444; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
     .progress { height: 100%; width: 0%; background: #06d6a0; transition: width 0.3s; }
     .card { background: #2f2f4f; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-    #pergunta { font-size: 20px; margin-bottom: 20px; color: #ffd166; }
+    #pergunta { font-size: 22px; margin-bottom: 20px; color: #ffd166; }
     .choices button { display: block; width: 100%; margin: 6px 0; padding: 12px; border-radius: 10px; border: none; cursor: pointer; background: #3f3f6a; color: white; font-size: 16px; }
     .choices button:hover { background: #57578a; }
     #feedback { margin-top: 15px; min-height: 40px; font-weight: bold; }
@@ -47,32 +47,68 @@
 </div>
 
 <script>
-// Base inspirada no dicionário: 3 declinações + gêneros
+// Substantivos já declinados (simulando dicionário)
 const palavras = [
-  { base: "λόγος", genero: "m", decl: 2 },
-  { base: "δῶρον", genero: "n", decl: 2 },
-  { base: "θάλαττα", genero: "f", decl: 1 },
-  { base: "ἀνήρ", genero: "m", decl: 3 }
+  {
+    genero: "m",
+    formas: {
+      nom_sg: "λόγος",
+      gen_sg: "λόγου",
+      dat_sg: "λόγῳ",
+      acc_sg: "λόγον",
+      nom_pl: "λόγοι",
+      gen_pl: "λόγων",
+      dat_pl: "λόγοις",
+      acc_pl: "λόγους"
+    }
+  },
+  {
+    genero: "n",
+    formas: {
+      nom_sg: "δῶρον",
+      gen_sg: "δώρου",
+      dat_sg: "δώρῳ",
+      acc_sg: "δῶρον",
+      nom_pl: "δῶρα",
+      gen_pl: "δώρων",
+      dat_pl: "δώροις",
+      acc_pl: "δῶρα"
+    }
+  },
+  {
+    genero: "f",
+    formas: {
+      nom_sg: "θάλαττα",
+      gen_sg: "θαλάττης",
+      dat_sg: "θαλάττῃ",
+      acc_sg: "θάλατταν",
+      nom_pl: "θάλατται",
+      gen_pl: "θαλαττῶν",
+      dat_pl: "θαλάτταις",
+      acc_pl: "θαλάττας"
+    }
+  }
 ];
 
-// artigos completos
 const artigos = {
   m: {
-    sg: { nom: "ὁ", gen: "τοῦ", dat: "τῷ", acc: "τὸν" },
-    pl: { nom: "οἱ", gen: "τῶν", dat: "τοῖς", acc: "τούς" }
+    nom_sg: "ὁ", gen_sg: "τοῦ", dat_sg: "τῷ", acc_sg: "τὸν",
+    nom_pl: "οἱ", gen_pl: "τῶν", dat_pl: "τοῖς", acc_pl: "τούς"
   },
   f: {
-    sg: { nom: "ἡ", gen: "τῆς", dat: "τῇ", acc: "τήν" },
-    pl: { nom: "αἱ", gen: "τῶν", dat: "ταῖς", acc: "τάς" }
+    nom_sg: "ἡ", gen_sg: "τῆς", dat_sg: "τῇ", acc_sg: "τήν",
+    nom_pl: "αἱ", gen_pl: "τῶν", dat_pl: "ταῖς", acc_pl: "τάς"
   },
   n: {
-    sg: { nom: "τό", gen: "τοῦ", dat: "τῷ", acc: "τό" },
-    pl: { nom: "τά", gen: "τῶν", dat: "τοῖς", acc: "τά" }
+    nom_sg: "τό", gen_sg: "τοῦ", dat_sg: "τῷ", acc_sg: "τό",
+    nom_pl: "τά", gen_pl: "τῶν", dat_pl: "τοῖς", acc_pl: "τά"
   }
 };
 
-const casos = ["nom", "gen", "dat", "acc"];
-const numeros = ["sg", "pl"];
+const formasLista = [
+  "nom_sg","gen_sg","dat_sg","acc_sg",
+  "nom_pl","gen_pl","dat_pl","acc_pl"
+];
 
 let atual = {};
 let pontos = 0;
@@ -85,19 +121,17 @@ function novaPergunta() {
   document.getElementById("feedback").innerText = "";
 
   const palavra = palavras[Math.floor(Math.random()*palavras.length)];
-  const caso = casos[Math.floor(Math.random()*casos.length)];
-  const numero = numeros[Math.floor(Math.random()*numeros.length)];
+  const forma = formasLista[Math.floor(Math.random()*formasLista.length)];
 
-  const correta = artigos[palavra.genero][numero][caso];
+  const substantivo = palavra.formas[forma];
+  const correta = artigos[palavra.genero][forma];
 
   let opcoes = [correta];
 
-  // gerar distrações
   while (opcoes.length < 4) {
     const g = ["m","f","n"][Math.floor(Math.random()*3)];
-    const n = numeros[Math.floor(Math.random()*2)];
-    const c = casos[Math.floor(Math.random()*4)];
-    const tentativa = artigos[g][n][c];
+    const f = formasLista[Math.floor(Math.random()*formasLista.length)];
+    const tentativa = artigos[g][f];
     if (!opcoes.includes(tentativa)) opcoes.push(tentativa);
   }
 
@@ -105,8 +139,7 @@ function novaPergunta() {
 
   atual = { correta };
 
-  document.getElementById("pergunta").innerText =
-    palavra.base + " — " + caso + " " + numero;
+  document.getElementById("pergunta").innerText = substantivo;
 
   const container = document.getElementById("choices");
   container.innerHTML = "";
@@ -123,7 +156,7 @@ function checar(resposta) {
   if (resposta === atual.correta) {
     pontos += 10;
     streak++;
-    document.getElementById("feedback").innerText = "✔";
+    document.getElementById("feedback").innerText = "✔ Perfeito!";
     document.getElementById("feedback").className = "correto";
   } else {
     streak = 0;

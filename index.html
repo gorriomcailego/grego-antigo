@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo de Grego Antigo</title>
+  <title>Duolingo de Grego Antigo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,76 +15,105 @@
       margin: 0;
     }
 
+    .app {
+      width: 360px;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #444;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: #06d6a0;
+      transition: width 0.3s;
+    }
+
     .card {
       background: #2f2f4f;
-      padding: 30px;
+      padding: 25px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       text-align: center;
-      width: 340px;
     }
 
     h1 {
-      font-size: 22px;
-      margin-bottom: 20px;
+      font-size: 20px;
+      margin-bottom: 15px;
     }
 
     #pergunta {
-      font-size: 20px;
+      font-size: 18px;
       margin-bottom: 20px;
       color: #ffd166;
     }
 
-    input {
+    .choices button {
+      display: block;
       width: 100%;
-      padding: 12px;
+      margin: 5px 0;
+      padding: 10px;
       border-radius: 10px;
       border: none;
-      margin-bottom: 15px;
-      font-size: 16px;
-      text-align: center;
-    }
-
-    button {
-      background: #06d6a0;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 16px;
       cursor: pointer;
-      transition: 0.2s;
+      background: #3f3f6a;
+      color: white;
     }
 
-    button:hover {
-      background: #04b383;
+    .choices button:hover {
+      background: #57578a;
     }
 
     #feedback {
       margin-top: 15px;
-      font-weight: bold;
       min-height: 40px;
+      font-weight: bold;
     }
 
     .correto { color: #06d6a0; }
     .meio { color: #ffd166; }
     .errado { color: #ef476f; }
 
-    .score {
-      margin-top: 10px;
+    .hud {
+      display: flex;
+      justify-content: space-between;
       font-size: 14px;
-      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+
+    .fade {
+      animation: fade 0.4s;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(10px);} 
+      to { opacity: 1; transform: translateY(0);} 
     }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h1>🇬🇷 Jogo de Grego Antigo</h1>
-  <div id="pergunta"></div>
-  <input id="resposta" type="text" placeholder="Digite sua resposta...">
-  <button onclick="checar()">Responder</button>
-  <div id="feedback"></div>
-  <div class="score" id="score"></div>
+<div class="app">
+  <div class="hud">
+    <div id="streak">🔥 0</div>
+    <div id="score">0 pts</div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="card fade">
+    <h1>🇬🇷 Grego Antigo</h1>
+    <div id="pergunta"></div>
+    <div class="choices" id="choices"></div>
+    <div id="feedback"></div>
+  </div>
 </div>
 
 <script>
@@ -118,60 +147,93 @@ const palavras = [
   }
 ];
 
+const casos = ["nominativo", "genitivo", "dativo", "acusativo"];
+
 let atual = {};
 let pontos = 0;
-let total = 0;
+let streak = 0;
+let progresso = 0;
 
 function normalizar(str) {
   return str
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/[\u1f00-\u1fff]/g, function(c) { // remove espíritos/iota subscrito aproximando
-      return c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    })
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
 function novaPergunta() {
-  const casos = ["nominativo", "genitivo", "dativo", "acusativo"];
+  document.getElementById("feedback").innerText = "";
+
   const palavra = palavras[Math.floor(Math.random()*palavras.length)];
   const caso = casos[Math.floor(Math.random()*casos.length)];
 
-  atual = {
-    correta: palavra.formas[caso]
-  };
+  const correta = palavra.formas[caso];
 
-  document.getElementById("pergunta").innerText =
-    palavra.base + " — " + caso;
+  let opcoes = [correta];
 
-  document.getElementById("resposta").value = "";
+  while (opcoes.length < 4) {
+    const p = palavras[Math.floor(Math.random()*palavras.length)];
+    const c = casos[Math.floor(Math.random()*casos.length)];
+    const tentativa = p.formas[c];
+    if (!opcoes.includes(tentativa)) opcoes.push(tentativa);
+  }
+
+  opcoes = shuffle(opcoes);
+
+  atual = { correta };
+
+  document.getElementById("pergunta").innerText = palavra.base + " — " + caso;
+
+  const container = document.getElementById("choices");
+  container.innerHTML = "";
+
+  opcoes.forEach(op => {
+    const btn = document.createElement("button");
+    btn.innerText = op;
+    btn.onclick = () => checar(op);
+    container.appendChild(btn);
+  });
 }
 
-function checar() {
-  const resposta = document.getElementById("resposta").value.trim();
-  total++;
-
+function checar(resposta) {
   const correta = atual.correta;
 
   if (resposta === correta) {
-    pontos += 1;
+    pontos += 10;
+    streak++;
     document.getElementById("feedback").innerText = "✔ Perfeito!";
     document.getElementById("feedback").className = "correto";
   } else if (normalizar(resposta) === normalizar(correta)) {
-    pontos += 0.5;
-    document.getElementById("feedback").innerText = "⚠ Quase! Forma correta: " + correta;
+    pontos += 5;
+    streak++;
+    document.getElementById("feedback").innerText = "⚠ Quase! " + correta;
     document.getElementById("feedback").className = "meio";
   } else {
-    document.getElementById("feedback").innerText = "✘ Errado! Correto: " + correta;
+    streak = 0;
+    document.getElementById("feedback").innerText = "✘ " + correta;
     document.getElementById("feedback").className = "errado";
   }
 
-  document.getElementById("score").innerText =
-    "Pontuação: " + pontos + " / " + total;
+  progresso += 10;
+  if (progresso > 100) progresso = 100;
 
-  setTimeout(novaPergunta, 1400);
+  document.getElementById("score").innerText = pontos + " pts";
+  document.getElementById("streak").innerText = "🔥 " + streak;
+  document.getElementById("progress").style.width = progresso + "%";
+
+  setTimeout(() => {
+    if (progresso === 100) {
+      alert("🏆 Você completou a lição!");
+      progresso = 0;
+    }
+    novaPergunta();
+  }, 900);
 }
 
 novaPergunta();

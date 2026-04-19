@@ -14,86 +14,17 @@
       height: 100vh;
       margin: 0;
     }
-
-    .app {
-      width: 360px;
-    }
-
-    .progress-bar {
-      height: 10px;
-      background: #444;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 15px;
-    }
-
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: #06d6a0;
-      transition: width 0.3s;
-    }
-
-    .card {
-      background: #2f2f4f;
-      padding: 25px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
-
-    #pergunta {
-      font-size: 18px;
-      margin-bottom: 20px;
-      color: #ffd166;
-    }
-
-    .choices button {
-      display: block;
-      width: 100%;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background: #3f3f6a;
-      color: white;
-    }
-
-    .choices button:hover {
-      background: #57578a;
-    }
-
-    #feedback {
-      margin-top: 15px;
-      min-height: 40px;
-      font-weight: bold;
-    }
-
+    .app { width: 360px; }
+    .progress-bar { height: 10px; background: #444; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+    .progress { height: 100%; width: 0%; background: #06d6a0; transition: width 0.3s; }
+    .card { background: #2f2f4f; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+    #pergunta { font-size: 20px; margin-bottom: 20px; color: #ffd166; }
+    .choices button { display: block; width: 100%; margin: 6px 0; padding: 12px; border-radius: 10px; border: none; cursor: pointer; background: #3f3f6a; color: white; font-size: 16px; }
+    .choices button:hover { background: #57578a; }
+    #feedback { margin-top: 15px; min-height: 40px; font-weight: bold; }
     .correto { color: #06d6a0; }
-    .meio { color: #ffd166; }
     .errado { color: #ef476f; }
-
-    .hud {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .fade {
-      animation: fade 0.4s;
-    }
-
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(10px);} 
-      to { opacity: 1; transform: translateY(0);} 
-    }
+    .hud { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -108,8 +39,7 @@
     <div class="progress" id="progress"></div>
   </div>
 
-  <div class="card fade">
-    <h1>🇬🇷 Grego Antigo</h1>
+  <div class="card">
     <div id="pergunta"></div>
     <div class="choices" id="choices"></div>
     <div id="feedback"></div>
@@ -117,70 +47,57 @@
 </div>
 
 <script>
+// Base inspirada no dicionário: 3 declinações + gêneros
 const palavras = [
-  {
-    base: "λόγος",
-    formas: {
-      nominativo: "ὁ λόγος",
-      genitivo: "τοῦ λόγου",
-      dativo: "τῷ λόγῳ",
-      acusativo: "τὸν λόγον"
-    }
-  },
-  {
-    base: "ἄνθρωπος",
-    formas: {
-      nominativo: "ὁ ἄνθρωπος",
-      genitivo: "τοῦ ἀνθρώπου",
-      dativo: "τῷ ἀνθρώπῳ",
-      acusativo: "τὸν ἄνθρωπον"
-    }
-  },
-  {
-    base: "δῶρον",
-    formas: {
-      nominativo: "τὸ δῶρον",
-      genitivo: "τοῦ δώρου",
-      dativo: "τῷ δώρῳ",
-      acusativo: "τὸ δῶρον"
-    }
-  }
+  { base: "λόγος", genero: "m", decl: 2 },
+  { base: "δῶρον", genero: "n", decl: 2 },
+  { base: "θάλαττα", genero: "f", decl: 1 },
+  { base: "ἀνήρ", genero: "m", decl: 3 }
 ];
 
-const casos = ["nominativo", "genitivo", "dativo", "acusativo"];
+// artigos completos
+const artigos = {
+  m: {
+    sg: { nom: "ὁ", gen: "τοῦ", dat: "τῷ", acc: "τὸν" },
+    pl: { nom: "οἱ", gen: "τῶν", dat: "τοῖς", acc: "τούς" }
+  },
+  f: {
+    sg: { nom: "ἡ", gen: "τῆς", dat: "τῇ", acc: "τήν" },
+    pl: { nom: "αἱ", gen: "τῶν", dat: "ταῖς", acc: "τάς" }
+  },
+  n: {
+    sg: { nom: "τό", gen: "τοῦ", dat: "τῷ", acc: "τό" },
+    pl: { nom: "τά", gen: "τῶν", dat: "τοῖς", acc: "τά" }
+  }
+};
+
+const casos = ["nom", "gen", "dat", "acc"];
+const numeros = ["sg", "pl"];
 
 let atual = {};
 let pontos = 0;
 let streak = 0;
 let progresso = 0;
 
-function normalizar(str) {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+function shuffle(a) { return a.sort(() => Math.random() - 0.5); }
 
 function novaPergunta() {
   document.getElementById("feedback").innerText = "";
 
   const palavra = palavras[Math.floor(Math.random()*palavras.length)];
   const caso = casos[Math.floor(Math.random()*casos.length)];
+  const numero = numeros[Math.floor(Math.random()*numeros.length)];
 
-  const correta = palavra.formas[caso];
+  const correta = artigos[palavra.genero][numero][caso];
 
   let opcoes = [correta];
 
+  // gerar distrações
   while (opcoes.length < 4) {
-    const p = palavras[Math.floor(Math.random()*palavras.length)];
-    const c = casos[Math.floor(Math.random()*casos.length)];
-    const tentativa = p.formas[c];
+    const g = ["m","f","n"][Math.floor(Math.random()*3)];
+    const n = numeros[Math.floor(Math.random()*2)];
+    const c = casos[Math.floor(Math.random()*4)];
+    const tentativa = artigos[g][n][c];
     if (!opcoes.includes(tentativa)) opcoes.push(tentativa);
   }
 
@@ -188,7 +105,8 @@ function novaPergunta() {
 
   atual = { correta };
 
-  document.getElementById("pergunta").innerText = palavra.base + " — " + caso;
+  document.getElementById("pergunta").innerText =
+    palavra.base + " — " + caso + " " + numero;
 
   const container = document.getElementById("choices");
   container.innerHTML = "";
@@ -202,21 +120,14 @@ function novaPergunta() {
 }
 
 function checar(resposta) {
-  const correta = atual.correta;
-
-  if (resposta === correta) {
+  if (resposta === atual.correta) {
     pontos += 10;
     streak++;
-    document.getElementById("feedback").innerText = "✔ Perfeito!";
+    document.getElementById("feedback").innerText = "✔";
     document.getElementById("feedback").className = "correto";
-  } else if (normalizar(resposta) === normalizar(correta)) {
-    pontos += 5;
-    streak++;
-    document.getElementById("feedback").innerText = "⚠ Quase! " + correta;
-    document.getElementById("feedback").className = "meio";
   } else {
     streak = 0;
-    document.getElementById("feedback").innerText = "✘ " + correta;
+    document.getElementById("feedback").innerText = "✘ " + atual.correta;
     document.getElementById("feedback").className = "errado";
   }
 
@@ -229,11 +140,11 @@ function checar(resposta) {
 
   setTimeout(() => {
     if (progresso === 100) {
-      alert("🏆 Você completou a lição!");
+      alert("🏆 Lição completa!");
       progresso = 0;
     }
     novaPergunta();
-  }, 900);
+  }, 800);
 }
 
 novaPergunta();
